@@ -1,5 +1,5 @@
 import logging
-from dataset import A2D2Dataset
+from dataset import A2D2DatasetIterator
 
 def log_all_boxes(record):
     """
@@ -9,11 +9,11 @@ def log_all_boxes(record):
         record (Record): The record containing the image data and 3D boxes.
     """
     if record.image_data.boxes:
-        logging.info(f"Total number of 3D boxes in the image: {len(record.image_data.boxes)}")
+        logging.info(f"Total number of 3D boxes in the image '{record.image_data.name}': {len(record.image_data.boxes)}")
         for idx, box in enumerate(record.image_data.boxes, start=1):
             logging.info(f"Box {idx}: {box}")
     else:
-        logging.warning("No 3D boxes found in the record.")
+        logging.warning(f"No 3D boxes found in the image '{record.image_data.name}'.")
 
 def main(label_file: str, flexray_file: str):
     """
@@ -21,7 +21,7 @@ def main(label_file: str, flexray_file: str):
     """
     # Setup logging configuration
     logging.basicConfig(
-        level=logging.INFO,  # You can set it to logging.DEBUG for more verbose output
+        level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler()  # Outputs logs to the console
@@ -32,18 +32,29 @@ def main(label_file: str, flexray_file: str):
     logging.info("Starting the A2D2 dataset processing...")
 
     try:
-        dataset = A2D2Dataset(label_file, flexray_file)
-        logging.info(f"Loaded 3D Labels: {dataset.get_3d_labels_size()} records")
-        logging.info(f"Loaded FlexRay Data: {dataset.get_flexray_data_size()} records")
+        dataset = A2D2DatasetIterator(label_file, flexray_file)
 
-        # Access a specific record
-        record = dataset.get_record("20181107132300_camera_frontcenter_000002775.png")
+        # Example of stepping through the dataset
+        logging.info("Iterating through all images:")
+        # while True:
+        #     record = dataset.step_next()
+        #     if record is None:
+        #         break
+        #     log_all_boxes(record)  # Log all 3D boxes in the current image
+        #     logging.info(f"FlexRay data: {record.flexray_data}")
 
-        # Log all the 3D boxes in the record
-        log_all_boxes(record)
+        first_record = dataset.step_next()
+        if first_record:
+            log_all_boxes(first_record)
+            logging.info(f"FlexRay data: {first_record.flexray_data}")
+        else:
+            logging.warning("No data found in the dataset.")
 
-        # Log the FlexRay data for the record
-        logging.info(f"FlexRay data: {record.flexray_data}")
+
+        # Reset and access all data at once
+        logging.info("Resetting dataset and fetching all records:")
+        all_records = dataset.get_all_data()
+        logging.info(f"Total number of records: {len(all_records)}")
 
     except Exception as e:
         logging.error(f"Error processing the dataset: {str(e)}")
