@@ -78,9 +78,9 @@ class ImageData:
     boxes: List[Box3D] = field(default_factory=list)
 
 @dataclass
-class AccelerationData:
+class DynamicVehicleData:
     """
-    Represents acceleration data for a specific axis (x or y).
+    Represents dynamic vehicle data (acceleration, steering angle, etc.) with timestamps and values.
     """
     timestamps: List[int]
     values: List[float]
@@ -89,12 +89,36 @@ class AccelerationData:
 @dataclass
 class FlexRayData:
     """
-    Represents the flexray data for a specific frame.
+    Represents the FlexRay data for a specific frame with various dynamic vehicle parameters.
     """
     frame_name: str
     timestamp: int
-    acceleration_x: AccelerationData
-    acceleration_y: AccelerationData
+    acceleration_x: DynamicVehicleData
+    acceleration_y: DynamicVehicleData
+    acceleration_z: DynamicVehicleData
+    accelerator_pedal: DynamicVehicleData
+    accelerator_pedal_gradient_sign: DynamicVehicleData
+    angular_velocity_omega_x: DynamicVehicleData
+    angular_velocity_omega_y: DynamicVehicleData
+    angular_velocity_omega_z: DynamicVehicleData
+    brake_pressure: DynamicVehicleData
+    distance_pulse_front_left: DynamicVehicleData
+    distance_pulse_front_right: DynamicVehicleData
+    distance_pulse_rear_left: DynamicVehicleData
+    distance_pulse_rear_right: DynamicVehicleData
+    driving_direction: DynamicVehicleData
+    gear: DynamicVehicleData
+    latitude_degree: DynamicVehicleData
+    latitude_direction: DynamicVehicleData
+    longitude_degree: DynamicVehicleData
+    longitude_direction: DynamicVehicleData
+    pitch_angle: DynamicVehicleData
+    roll_angle: DynamicVehicleData
+    steering_angle: DynamicVehicleData
+    steering_angle_calculated: DynamicVehicleData
+    steering_angle_calculated_sign: DynamicVehicleData
+    steering_angle_sign: DynamicVehicleData
+    vehicle_speed: DynamicVehicleData
 
 @dataclass
 class Record:
