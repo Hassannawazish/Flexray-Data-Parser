@@ -86,17 +86,6 @@ class AccelerationData:
     values: List[float]
     unit: str
 
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'AccelerationData':
-        """
-        Creates an AccelerationData object from a dictionary.
-        """
-        return AccelerationData(
-            timestamps=data["timestamps"],
-            values=data["values"],
-            unit=data["unit"]
-        )
-
 @dataclass
 class FlexRayData:
     """
@@ -106,18 +95,6 @@ class FlexRayData:
     timestamp: int
     acceleration_x: AccelerationData
     acceleration_y: AccelerationData
-
-    @staticmethod
-    def from_dict(data: Dict[str, Any]) -> 'FlexRayData':
-        """
-        Creates a FlexRayData object from a dictionary.
-        """
-        return FlexRayData(
-            frame_name=data["frame_name"],
-            timestamp=data["timestamp"],
-            acceleration_x=AccelerationData.from_dict(data["flexray"]["acceleration_x"]),
-            acceleration_y=AccelerationData.from_dict(data["flexray"]["acceleration_y"])
-        )
 
 @dataclass
 class Record:

@@ -1,9 +1,9 @@
-# a2d2_dataset/parser.py
+# a2d2_dataset/json_parser.py
 
 import json
-from data_models import ImageData, Box3D, Box3DAttributes, FlexRayData
+from data_models import ImageData, Box3D, Box3DAttributes, FlexRayData, AccelerationData
 
-def load_3d_labels(file_path: str) -> ImageData:
+def load_3d_labels(file_path: str) -> list:
     """
     Loads the 3D label data from a JSON file.
     """
@@ -33,11 +33,19 @@ def load_3d_labels(file_path: str) -> ImageData:
         ))
     return images
 
-def load_flexray_data(file_path: str) -> FlexRayData:
+def load_flexray_data(file_path: str) -> list:
     """
-    Loads the FlexRay data from a JSON file.
+    Loads FlexRay data from a JSON file.
     """
     with open(file_path, 'r') as f:
         data = json.load(f)
-    flexray_data = [FlexRayData.from_dict(entry) for entry in data]
+    flexray_data = [
+        FlexRayData(
+            frame_name=entry["frame_name"],
+            timestamp=entry["timestamp"],
+            acceleration_x=AccelerationData(**entry["flexray"]["acceleration_x"]),
+            acceleration_y=AccelerationData(**entry["flexray"]["acceleration_y"])
+        )
+        for entry in data
+    ]
     return flexray_data

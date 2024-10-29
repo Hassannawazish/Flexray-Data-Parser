@@ -1,66 +1,49 @@
+# a2d2_dataset/main.py
+
 import logging
 from dataset import A2D2DatasetIterator
 
-def log_all_boxes(record):
+def format_accel_data(accel_data):
     """
-    Logs all 3D boxes in the given record.
+    Formats the acceleration data to the desired string format.
     
     Args:
-        record (Record): The record containing the image data and 3D boxes.
+        accel_data (AccelerationData): The acceleration data to format.
+
+    Returns:
+        str: Formatted acceleration data as a string.
     """
-    if record.image_data.boxes:
-        logging.info(f"Total number of 3D boxes in the image '{record.image_data.name}': {len(record.image_data.boxes)}")
-        for idx, box in enumerate(record.image_data.boxes, start=1):
-            logging.info(f"Box {idx}: {box}")
-    else:
-        logging.warning(f"No 3D boxes found in the image '{record.image_data.name}'.")
+    return f"[timestamps={accel_data.timestamps}, values={accel_data.values}, unit='{accel_data.unit}']"
 
 def main(label_file: str, flexray_file: str):
-    """
-    Main function to load and process the A2D2 dataset.
-    """
-    # Setup logging configuration
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler()  # Outputs logs to the console
-        ]
+        handlers=[logging.StreamHandler()]
     )
 
-    # Log the start of the process
-    logging.info("Starting the A2D2 dataset processing...")
-
+    logging.info("Starting dataset processing...")
     try:
         dataset = A2D2DatasetIterator(label_file, flexray_file)
 
-        # Example of stepping through the dataset
-        logging.info("Iterating through all images:")
-        # while True:
-        #     record = dataset.step_next()
-        #     if record is None:
-        #         break
-        #     log_all_boxes(record)  # Log all 3D boxes in the current image
-        #     logging.info(f"FlexRay data: {record.flexray_data}")
+        # Step through each timestamp and retrieve matched data
+        while True:
+            record = dataset.step_next()
+            if record is None:
+                break
 
-        first_record = dataset.step_next()
-        if first_record:
-            log_all_boxes(first_record)
-            logging.info(f"FlexRay data: {first_record.flexray_data}")
-        else:
-            logging.warning("No data found in the dataset.")
-
-
-        # Reset and access all data at once
-        logging.info("Resetting dataset and fetching all records:")
-        all_records = dataset.get_all_data()
-        logging.info(f"Total number of records: {len(all_records)}")
+            logging.info(f"Image Name: {record.image_data.name}")
+            logging.info(f"Bounding Boxes: {record.image_data.boxes}")
+            if record.flexray_data:
+                logging.info(f"FlexRay Data: frame_name='{record.flexray_data.frame_name}', "
+                             f"timestamp={record.flexray_data.timestamp}, "
+                             f"acceleration_x={format_accel_data(record.flexray_data.acceleration_x)}, "
+                             f"acceleration_y={format_accel_data(record.flexray_data.acceleration_y)}")
 
     except Exception as e:
-        logging.error(f"Error processing the dataset: {str(e)}")
+        logging.error(f"Error processing dataset: {str(e)}")
 
-    # Log the end of the process
-    logging.info("Completed the A2D2 dataset processing.")
+    logging.info("Dataset processing completed.")
 
 
 if __name__ == "__main__":
