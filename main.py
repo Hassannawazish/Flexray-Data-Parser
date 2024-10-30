@@ -1,44 +1,63 @@
-# a2d2_dataset/main.py
+# main.py
 
 import logging
 from dataset import A2D2DatasetIterator
+from data_models import DynamicVehicleData
 
-def format_accel_data(accel_data):
+def get_dynamic_vehicle_data_dict(flexray_data):
     """
-    Formats the acceleration data to the desired string format.
-    
+    Creates a dictionary of dynamic vehicle data from FlexRayData.
+
     Args:
-        accel_data (AccelerationData): The acceleration data to format.
+        flexray_data (FlexRayData): The FlexRay data for a specific frame.
 
     Returns:
-        str: Formatted acceleration data as a string.
+        dict: A dictionary containing all dynamic vehicle data.
     """
-    return f"[timestamps={accel_data.timestamps}, values={accel_data.values}, unit='{accel_data.unit}']"
+    data_dict = {
+        "frame_name": flexray_data.frame_name,
+        "timestamp": flexray_data.timestamp,
+        "dynamic_data": {}
+    }
+
+    # Populate dynamic data fields
+    for param, data in flexray_data.__dict__.items():
+        if isinstance(data, DynamicVehicleData):
+            data_dict["dynamic_data"][param] = {
+                "timestamps": data.timestamps,
+                "values": data.values,
+                "unit": data.unit
+            }
+    return data_dict
 
 def main(label_file: str, flexray_file: str):
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[logging.StreamHandler()]
     )
 
     logging.info("Starting dataset processing...")
+
     try:
         dataset = A2D2DatasetIterator(label_file, flexray_file)
+        logging.debug("Dataset iterator created successfully.")
 
-        # Step through each timestamp and retrieve matched data
         while True:
             record = dataset.step_next()
             if record is None:
+                logging.info("No more records to process.")
                 break
 
             logging.info(f"Image Name: {record.image_data.name}")
             logging.info(f"Bounding Boxes: {record.image_data.boxes}")
+
+            # If FlexRay data exists, format and log it as a single dictionary
             if record.flexray_data:
-                logging.info(f"FlexRay Data: frame_name='{record.flexray_data.frame_name}', "
-                             f"timestamp={record.flexray_data.timestamp}, "
-                             f"acceleration_x={format_accel_data(record.flexray_data.acceleration_x)}, "
-                             f"acceleration_y={format_accel_data(record.flexray_data.acceleration_y)}")
+                flexray_data_dict = get_dynamic_vehicle_data_dict(record.flexray_data)
+                logging.info(f"FlexRay Data: {flexray_data_dict}")
+            else:
+                logging.warning("FlexRay data not found for this record.")
 
     except Exception as e:
         logging.error(f"Error processing dataset: {str(e)}")
